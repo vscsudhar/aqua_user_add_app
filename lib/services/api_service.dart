@@ -41,17 +41,28 @@ class ApiService {
 
   static String resolveDefaultBaseUrl() {
     const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
-    if (envUrl.isNotEmpty) return envUrl;
+    if (envUrl.isNotEmpty) {
+      var formatted = envUrl.trim();
+      if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
+        formatted = 'https://$formatted';
+      }
+      if (!formatted.endsWith('/api/v1')) {
+        formatted = formatted.endsWith('/') ? '${formatted}api/v1' : '$formatted/api/v1';
+      }
+      return formatted;
+    }
 
     if (kIsWeb) {
       final host = Uri.base.host;
-      if (host.isNotEmpty && host != 'localhost') {
-        return 'http://$host:8000/api/v1';
+      if (host.isNotEmpty && host != 'localhost' && host != '127.0.0.1') {
+        if (host.contains('ethiodeploy.app')) {
+          return 'https://aqua-api.ethiodeploy.app/api/v1';
+        }
       }
     }
 
-    // Default to current machine Wi-Fi IP so connected mobile devices and network clients can connect
-    return 'http://192.168.0.174:8000/api/v1';
+    // Default to Marina Aqua live cloud deployment
+    return 'https://aqua-api.ethiodeploy.app/api/v1';
   }
 
   ApiService([StorageService? storageService])
@@ -61,9 +72,9 @@ class ApiService {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 45),
+        receiveTimeout: const Duration(seconds: 45),
+        sendTimeout: const Duration(seconds: 45),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
@@ -107,7 +118,11 @@ class ApiService {
   void setBaseUrl(String url) {
     var formatted = url.trim();
     if (!formatted.startsWith('http://') && !formatted.startsWith('https://')) {
-      formatted = 'http://$formatted';
+      if (formatted.contains('ethiodeploy.app') || !formatted.contains(':8000')) {
+        formatted = 'https://$formatted';
+      } else {
+        formatted = 'http://$formatted';
+      }
     }
     if (!formatted.endsWith('/api/v1')) {
       if (formatted.endsWith('/')) {
@@ -120,9 +135,24 @@ class ApiService {
   }
 
   Future<void> init() async {
+    const envUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
+    if (envUrl.isNotEmpty) {
+      setBaseUrl(envUrl);
+      await _storageService.saveBaseUrl(_dio.options.baseUrl);
+      return;
+    }
+
     final savedUrl = await _storageService.getBaseUrl();
     if (savedUrl != null && savedUrl.trim().isNotEmpty) {
-      setBaseUrl(savedUrl);
+      // If the saved URL is the legacy local Wi-Fi IP, migrate to the cloud URL
+      if (savedUrl.contains('192.168.0.174')) {
+        setBaseUrl('https://aqua-api.ethiodeploy.app/api/v1');
+        await _storageService.saveBaseUrl(_dio.options.baseUrl);
+      } else {
+        setBaseUrl(savedUrl);
+      }
+    } else {
+      setBaseUrl('https://aqua-api.ethiodeploy.app/api/v1');
     }
   }
 

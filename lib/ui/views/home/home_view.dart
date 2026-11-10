@@ -1289,7 +1289,7 @@ class HomeView extends StackedView<HomeViewModel> {
                   DataCell(
                     Switch(
                       value: c.isActive,
-                      activeColor: kcSuccess,
+                      activeThumbColor: kcSuccess,
                       inactiveThumbColor: Colors.grey,
                       onChanged: (_) => viewModel.toggleCompanyStatus(c),
                     ),
@@ -1377,7 +1377,7 @@ class HomeView extends StackedView<HomeViewModel> {
                 children: [
                   Switch(
                     value: c.isActive,
-                    activeColor: kcSuccess,
+                    activeThumbColor: kcSuccess,
                     inactiveThumbColor: Colors.grey,
                     onChanged: (_) => viewModel.toggleCompanyStatus(c),
                   ),
@@ -1962,7 +1962,7 @@ class HomeView extends StackedView<HomeViewModel> {
                       ),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
-                        value: viewModel.plans.any((p) => p.id == selectedPlanId)
+                        initialValue: viewModel.plans.any((p) => p.id == selectedPlanId)
                             ? selectedPlanId
                             : (viewModel.plans.isNotEmpty ? viewModel.plans.first.id : null),
                         isExpanded: true,
@@ -2012,7 +2012,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           isExpanded: true,
                           dropdownColor: const Color(0xFF1E293B),
                           style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -2052,7 +2052,7 @@ class HomeView extends StackedView<HomeViewModel> {
                                   ),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
-                                    value: selectedStatus,
+                                    initialValue: selectedStatus,
                                     isExpanded: true,
                                     dropdownColor: const Color(0xFF1E293B),
                                     style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -2395,7 +2395,7 @@ class HomeView extends StackedView<HomeViewModel> {
                       Text('Subscription Plan *', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<int>(
-                        value: viewModel.plans.any((p) => p.id == selectedPlanId)
+                        initialValue: viewModel.plans.any((p) => p.id == selectedPlanId)
                             ? selectedPlanId
                             : (viewModel.plans.isNotEmpty ? viewModel.plans.first.id : null),
                         isExpanded: true,
@@ -2439,7 +2439,7 @@ class HomeView extends StackedView<HomeViewModel> {
                       Text('Status', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                       const SizedBox(height: 6),
                       DropdownButtonFormField<String>(
-                        value: selectedStatus,
+                        initialValue: selectedStatus,
                         isExpanded: true,
                         dropdownColor: const Color(0xFF1E293B),
                         style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -2865,7 +2865,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         Text('Status', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           isExpanded: true,
                           dropdownColor: const Color(0xFF1E293B),
                           style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -2904,7 +2904,7 @@ class HomeView extends StackedView<HomeViewModel> {
                                   Text('Status', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
-                                    value: selectedStatus,
+                                    initialValue: selectedStatus,
                                     isExpanded: true,
                                     dropdownColor: const Color(0xFF1E293B),
                                     style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -3070,7 +3070,7 @@ class HomeView extends StackedView<HomeViewModel> {
                         Text('Status', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: selectedStatus,
+                          initialValue: selectedStatus,
                           isExpanded: true,
                           dropdownColor: const Color(0xFF1E293B),
                           style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -3109,7 +3109,7 @@ class HomeView extends StackedView<HomeViewModel> {
                                   Text('Status', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                                   const SizedBox(height: 6),
                                   DropdownButtonFormField<String>(
-                                    value: selectedStatus,
+                                    initialValue: selectedStatus,
                                     isExpanded: true,
                                     dropdownColor: const Color(0xFF1E293B),
                                     style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
@@ -3505,7 +3505,7 @@ class HomeView extends StackedView<HomeViewModel> {
                                   ),
                                   Switch(
                                     value: u.isActive,
-                                    activeColor: kcSuccess,
+                                    activeThumbColor: kcSuccess,
                                     inactiveThumbColor: Colors.grey,
                                     onChanged: (_) async {
                                       await viewModel.toggleCompanyUserStatus(company.id, u.id);
@@ -3672,7 +3672,7 @@ class HomeView extends StackedView<HomeViewModel> {
                     Text('Role *', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
-                      value: selectedRole,
+                      initialValue: selectedRole,
                       isExpanded: true,
                       dropdownColor: const Color(0xFF1E293B),
                       style: GoogleFonts.inter(color: Colors.white, fontSize: 13),
@@ -3900,7 +3900,7 @@ class HomeView extends StackedView<HomeViewModel> {
                     Text('Role *', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFCBD5E1))),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
-                      value: selectedRole,
+                      initialValue: selectedRole,
                       isExpanded: true,
                       dropdownColor: const Color(0xFF1E293B),
                       style: GoogleFonts.inter(color: Colors.white, fontSize: 13),

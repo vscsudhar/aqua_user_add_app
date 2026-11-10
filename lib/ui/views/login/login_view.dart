@@ -421,7 +421,7 @@ class LoginView extends StackedView<LoginViewModel> {
                 decoration: InputDecoration(
                   labelText: 'Base URL',
                   labelStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
-                  hintText: 'http://192.168.0.174:8000/api/v1',
+                  hintText: 'https://aqua-api.ethiodeploy.app/api/v1',
                   hintStyle: GoogleFonts.inter(color: const Color(0xFF64748B)),
                   filled: true,
                   fillColor: const Color(0xFF0F172A),
@@ -440,8 +440,17 @@ class LoginView extends StackedView<LoginViewModel> {
                 children: [
                   ActionChip(
                     backgroundColor: const Color(0xFF0F172A),
+                    side: const BorderSide(color: kcPrimaryColor),
+                    avatar: const Icon(Icons.cloud_done_rounded, size: 14, color: kcPrimaryLight),
+                    label: Text('Marina Aqua Cloud', style: GoogleFonts.inter(fontSize: 11, color: kcPrimaryLight, fontWeight: FontWeight.w600)),
+                    onPressed: () {
+                      controller.text = 'https://aqua-api.ethiodeploy.app/api/v1';
+                    },
+                  ),
+                  ActionChip(
+                    backgroundColor: const Color(0xFF0F172A),
                     side: const BorderSide(color: Color(0xFF334155)),
-                    label: Text('Wi-Fi (192.168.0.174)', style: GoogleFonts.inter(fontSize: 11, color: kcPrimaryLight)),
+                    label: Text('Wi-Fi (192.168.0.174)', style: GoogleFonts.inter(fontSize: 11, color: Colors.white70)),
                     onPressed: () {
                       controller.text = 'http://192.168.0.174:8000/api/v1';
                     },
