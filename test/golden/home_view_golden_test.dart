@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aqua_user/app/app.locator.dart';
+import 'package:aqua_user/models/super_admin_user.dart';
 import 'package:aqua_user/services/admin_auth_service.dart';
 import 'package:aqua_user/services/api_service.dart';
 import 'package:aqua_user/services/company_service.dart';
@@ -12,8 +15,13 @@ import 'package:aqua_user/ui/views/login/login_view.dart';
 import '../helpers/test_helpers.dart';
 
 void main() {
+  setUpAll(() {
+    GoogleFonts.config.allowRuntimeFetching = false;
+  });
+
   group('LoginView Widget Tests -', () {
     setUp(() {
+      SharedPreferences.setMockInitialValues({});
       registerServices();
       if (!locator.isRegistered<StorageService>()) {
         locator.registerSingleton<StorageService>(StorageService());
@@ -221,6 +229,39 @@ void main() {
 
       expect(dialogResult, isFalse);
       expect(dummyViewModel.activeTab, equals('dashboard'));
+    });
+
+    testWidgets('HomeView AppBar profile chip displays first letter and tooltip', (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final authService = locator<AdminAuthService>();
+      const testUser = SuperAdminUser(
+        id: 1,
+        name: 'Sudharsan Admin',
+        email: 'sudhar@example.com',
+        role: 'super_admin',
+        isActive: true,
+      );
+      await authService.updateCurrentUser(testUser);
+
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: HomeView(),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 200));
+      });
+      await tester.pump();
+
+      // Check first letter 'S' is rendered
+      expect(find.text('S'), findsOneWidget);
+
+      // Verify profile chip with tooltip exists
+      final profileChip = find.byTooltip('View & Edit Profile');
+      expect(profileChip, findsOneWidget);
     });
   });
 }

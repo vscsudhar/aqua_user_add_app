@@ -236,52 +236,70 @@ class HomeView extends StackedView<HomeViewModel> {
                 },
         ),
 
-        // Super Admin Profile Chip
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: kcPrimaryColor,
-                child: Text(
-                  viewModel.currentUser?.name.isNotEmpty == true
-                      ? viewModel.currentUser!.name[0].toUpperCase()
-                      : 'A',
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
+        // Super Admin Profile Chip (Tappable to view & edit profile)
+        Tooltip(
+          message: 'View & Edit Profile',
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: () => viewModel.openProfile(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: kcPrimaryColor,
+                    backgroundImage: (viewModel.currentUser?.profileImage != null &&
+                            viewModel.currentUser!.profileImage!.isNotEmpty)
+                        ? NetworkImage(viewModel.currentUser!.profileImage!)
+                        : null,
+                    onBackgroundImageError: (viewModel.currentUser?.profileImage != null &&
+                            viewModel.currentUser!.profileImage!.isNotEmpty)
+                        ? (_, __) {}
+                        : null,
+                    child: (viewModel.currentUser?.profileImage == null ||
+                            viewModel.currentUser!.profileImage!.isEmpty)
+                        ? Text(
+                            viewModel.currentUser?.name.isNotEmpty == true
+                                ? viewModel.currentUser!.name[0].toUpperCase()
+                                : 'A',
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14,
+                            ),
+                          )
+                        : null,
                   ),
-                ),
-              ),
-              if (!isMobile) ...[
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      viewModel.currentUser?.name ?? 'Super Admin',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      'super_admin',
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        color: kcPrimaryLight,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  if (!isMobile) ...[
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          viewModel.currentUser?.name ?? 'Super Admin',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'super_admin',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            color: kcPrimaryLight,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ],
-            ],
+                ],
+              ),
+            ),
           ),
         ),
 

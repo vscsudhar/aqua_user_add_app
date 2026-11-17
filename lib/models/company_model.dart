@@ -5,6 +5,8 @@ class CompanyModel {
   final int id;
   final String companyCode;
   final String name;
+  final String? companyType;
+  final int? ownerCompanyId;
   final int? planId;
   final String status;
   final String? email;
@@ -19,6 +21,8 @@ class CompanyModel {
     required this.id,
     required this.companyCode,
     required this.name,
+    this.companyType,
+    this.ownerCompanyId,
     this.planId,
     required this.status,
     this.email,
@@ -35,6 +39,10 @@ class CompanyModel {
       id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
       companyCode: json['company_code'] as String? ?? '',
       name: json['name'] as String? ?? '',
+      companyType: json['company_type'] as String?,
+      ownerCompanyId: json['owner_company_id'] is int
+          ? json['owner_company_id']
+          : int.tryParse(json['owner_company_id']?.toString() ?? ''),
       planId: json['plan_id'] is int ? json['plan_id'] : int.tryParse(json['plan_id']?.toString() ?? ''),
       status: json['status'] as String? ?? 'active',
       email: json['email'] as String?,
@@ -54,6 +62,8 @@ class CompanyModel {
       'id': id,
       'company_code': companyCode,
       'name': name,
+      'company_type': companyType,
+      'owner_company_id': ownerCompanyId,
       'plan_id': planId,
       'status': status,
       'email': email,
@@ -67,6 +77,12 @@ class CompanyModel {
   }
 
   bool get isActive => status == 'active';
+  bool get isMainCompany =>
+      (companyType == null || companyType == 'main') &&
+      ownerCompanyId == null &&
+      planId != null;
+  bool get isDealerCompany =>
+      companyType == 'dealer' || ownerCompanyId != null || planId == null;
   String get adminEmail => adminUser?.email ?? email ?? '—';
   String get adminName => adminUser?.name ?? 'Admin';
   String get planName => plan?.name ?? 'No Plan';

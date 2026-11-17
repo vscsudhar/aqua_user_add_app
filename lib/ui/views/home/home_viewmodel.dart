@@ -15,11 +15,14 @@ import '../../../services/admin_auth_service.dart';
 import '../../../services/company_service.dart';
 import '../../../services/plan_service.dart';
 
-class HomeViewModel extends BaseViewModel {
+class HomeViewModel extends ReactiveViewModel {
   final _authService = locator<AdminAuthService>();
   final _companyService = locator<CompanyService>();
   final _planService = locator<PlanService>();
   final _navigationService = locator<NavigationService>();
+
+  @override
+  List<ListenableServiceMixin> get listenableServices => [_authService];
 
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -42,6 +45,11 @@ class HomeViewModel extends BaseViewModel {
   int? get selectedPlanId => _selectedPlanId;
   String? get errorMessage => _errorMessage;
   SuperAdminUser? get currentUser => _authService.currentUser;
+
+  Future<void> openProfile() async {
+    await _navigationService.navigateToProfileView();
+    notifyListeners();
+  }
 
   Future<void> init() async {
     await refreshAll();
@@ -94,11 +102,13 @@ class HomeViewModel extends BaseViewModel {
   Future<void> fetchCompanies({bool silent = false}) async {
     if (!silent) setBusy(true);
     try {
-      _companies = await _companyService.getCompanies(
+      final fetched = await _companyService.getCompanies(
         search: _searchQuery.isNotEmpty ? _searchQuery : null,
         status: _selectedStatus,
         planId: _selectedPlanId,
       );
+      // Main company isolation defense-in-depth: only main subscription companies appear in aqua_user
+      _companies = fetched.where((c) => c.isMainCompany).toList();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {

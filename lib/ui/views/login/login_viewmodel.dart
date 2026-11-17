@@ -72,6 +72,29 @@ class LoginViewModel extends BaseViewModel {
     }
   }
 
+  Future<Map<String, dynamic>> sendForgotPasswordCode(String emailOrUsername) async {
+    return await _authService.forgotPassword(emailOrUsername);
+  }
+
+  Future<String> submitPasswordReset({
+    required String email,
+    required String code,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final msg = await _authService.resetPassword(
+      email: email,
+      code: code,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+    _login = email;
+    _password = newPassword;
+    _errorMessage = null;
+    notifyListeners();
+    return msg;
+  }
+
   void fillDemoCredentials() {
     _login = 'superadmin@aquasystem.com';
     _password = 'Admin@1234';

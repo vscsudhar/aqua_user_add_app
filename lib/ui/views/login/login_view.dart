@@ -275,7 +275,30 @@ class LoginView extends StackedView<LoginViewModel> {
                         onChanged: viewModel.setPassword,
                         onSubmitted: (_) => viewModel.submitLogin(),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
+
+                      // Forgot Password Link
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          key: const ValueKey('forgot_password_button'),
+                          onPressed: () => _openForgotPasswordDialog(context, viewModel),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Forgot Password?',
+                            style: GoogleFonts.inter(
+                              color: kcPrimaryLight,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
 
                       // Sign In Button
                       SizedBox(
@@ -500,6 +523,356 @@ class LoginView extends StackedView<LoginViewModel> {
     );
   }
 
+  void _openForgotPasswordDialog(BuildContext context, LoginViewModel viewModel) {
+    showDialog(
+      context: context,
+      builder: (ctx) => _ForgotPasswordDialog(viewModel: viewModel),
+    );
+  }
+
   @override
   LoginViewModel viewModelBuilder(BuildContext context) => LoginViewModel();
+}
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  final LoginViewModel viewModel;
+  const _ForgotPasswordDialog({Key? key, required this.viewModel}) : super(key: key);
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  int _step = 1;
+  late final TextEditingController _emailCtrl;
+  final TextEditingController _codeCtrl = TextEditingController();
+  final TextEditingController _newPassCtrl = TextEditingController();
+  final TextEditingController _confirmPassCtrl = TextEditingController();
+
+  bool _obscureNewPass = true;
+  bool _obscureConfirmPass = true;
+  bool _isLoading = false;
+  String? _dialogError;
+  String? _dialogSuccess;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl = TextEditingController(text: widget.viewModel.login);
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _codeCtrl.dispose();
+    _newPassCtrl.dispose();
+    _confirmPassCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleSendCode() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) {
+      setState(() => _dialogError = 'Please enter your email or username.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _dialogError = null;
+      _dialogSuccess = null;
+    });
+
+    try {
+      final res = await widget.viewModel.sendForgotPasswordCode(email);
+      final generatedCode = res['reset_code']?.toString() ?? res['code']?.toString();
+      final resolvedEmail = res['email']?.toString() ?? email;
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _step = 2;
+          if (generatedCode != null && generatedCode.isNotEmpty) {
+            _codeCtrl.text = generatedCode;
+          }
+          _emailCtrl.text = resolvedEmail;
+          _dialogSuccess = 'Verification code generated! Please enter the code and your new password.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _dialogError = e.toString();
+        });
+      }
+    }
+  }
+
+  Future<void> _handleResetPassword() async {
+    final email = _emailCtrl.text.trim();
+    final code = _codeCtrl.text.trim();
+    final newPass = _newPassCtrl.text;
+    final confirmPass = _confirmPassCtrl.text;
+
+    if (code.isEmpty) {
+      setState(() => _dialogError = 'Please enter the 6-digit verification code.');
+      return;
+    }
+    if (newPass.length < 6) {
+      setState(() => _dialogError = 'Password must be at least 6 characters long.');
+      return;
+    }
+    if (newPass != confirmPass) {
+      setState(() => _dialogError = 'Passwords do not match. Please verify.');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _dialogError = null;
+      _dialogSuccess = null;
+    });
+
+    try {
+      final msg = await widget.viewModel.submitPasswordReset(
+        email: email,
+        code: code,
+        newPassword: newPass,
+        confirmPassword: confirmPass,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _dialogSuccess = msg;
+        });
+
+        Future.delayed(const Duration(milliseconds: 1400), () {
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(msg),
+                backgroundColor: kcSuccess,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _dialogError = e.toString();
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF111827),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFF334155)),
+      ),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: kcPrimaryColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.lock_reset, color: kcPrimaryLight, size: 22),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            _step == 1 ? 'Forgot Password' : 'Reset Password',
+            style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _step == 1
+                    ? 'Enter your registered email address or username. A verification code will be generated to reset your password.'
+                    : 'Enter the verification code and choose a secure new password for your administrator account.',
+                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
+              ),
+              const SizedBox(height: 16),
+
+              if (_dialogSuccess != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: kcSuccess.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: kcSuccess.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.check_circle_outline, color: kcSuccess, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _dialogSuccess!,
+                          style: GoogleFonts.inter(color: kcSuccess, fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              if (_dialogError != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: kcDanger.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: kcDanger.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: kcDanger, size: 16),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _dialogError!,
+                          style: GoogleFonts.inter(color: kcDanger, fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              if (_step == 1) ...[
+                Text('Email or Username', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _emailCtrl,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'admin@example.com',
+                    hintStyle: GoogleFonts.inter(color: Colors.white30, fontSize: 13),
+                    prefixIcon: const Icon(Icons.email_outlined, color: kcPrimaryLight, size: 18),
+                    filled: true,
+                    fillColor: const Color(0xFF0F172A),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ] else ...[
+                Text('Registered Email', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _emailCtrl,
+                  readOnly: true,
+                  style: GoogleFonts.inter(color: Colors.white60, fontSize: 13),
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38, size: 18),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Text('Verification Code', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _codeCtrl,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 2),
+                  decoration: InputDecoration(
+                    hintText: '6-digit code',
+                    hintStyle: GoogleFonts.inter(color: Colors.white30, fontSize: 13, letterSpacing: 0),
+                    prefixIcon: const Icon(Icons.security, color: kcPrimaryLight, size: 18),
+                    filled: true,
+                    fillColor: const Color(0xFF0F172A),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Text('New Password (min 6 chars)', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _newPassCtrl,
+                  obscureText: _obscureNewPass,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Enter new password',
+                    hintStyle: GoogleFonts.inter(color: Colors.white30, fontSize: 13),
+                    prefixIcon: const Icon(Icons.lock_outline, color: kcPrimaryLight, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscureNewPass ? Icons.visibility_off : Icons.visibility, color: Colors.white38, size: 18),
+                      onPressed: () => setState(() => _obscureNewPass = !_obscureNewPass),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0F172A),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Text('Confirm New Password', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: _confirmPassCtrl,
+                  obscureText: _obscureConfirmPass,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+                  decoration: InputDecoration(
+                    hintText: 'Re-enter new password',
+                    hintStyle: GoogleFonts.inter(color: Colors.white30, fontSize: 13),
+                    prefixIcon: const Icon(Icons.lock_outline, color: kcPrimaryLight, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscureConfirmPass ? Icons.visibility_off : Icons.visibility, color: Colors.white38, size: 18),
+                      onPressed: () => setState(() => _obscureConfirmPass = !_obscureConfirmPass),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFF0F172A),
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+          child: Text('Cancel', style: GoogleFonts.inter(color: Colors.white70)),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: kcPrimaryColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          onPressed: _isLoading ? null : (_step == 1 ? _handleSendCode : _handleResetPassword),
+          child: _isLoading
+              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : Text(_step == 1 ? 'Send Code' : 'Reset Password', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        ),
+      ],
+    );
+  }
 }

@@ -2,6 +2,7 @@ import 'package:aqua_user/ui/bottom_sheets/notice/notice_sheet.dart';
 import 'package:aqua_user/ui/dialogs/info_alert/info_alert_dialog.dart';
 import 'package:aqua_user/ui/views/home/home_view.dart';
 import 'package:aqua_user/ui/views/login/login_view.dart';
+import 'package:aqua_user/ui/views/profile/profile_view.dart';
 import 'package:aqua_user/ui/views/startup/startup_view.dart';
 import 'package:stacked/stacked_annotations.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -17,6 +18,7 @@ import '../services/storage_service.dart';
     MaterialRoute(page: StartupView, initial: true),
     MaterialRoute(page: LoginView),
     MaterialRoute(page: HomeView),
+    MaterialRoute(page: ProfileView),
   ],
   dependencies: [
     LazySingleton(classType: BottomSheetService),

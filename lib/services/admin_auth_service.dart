@@ -96,6 +96,173 @@ class AdminAuthService with ListenableServiceMixin {
     }
   }
 
+  Future<void> updateCurrentUser(SuperAdminUser updatedUser) async {
+    await _storageService.saveUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  Future<SuperAdminUser> fetchProfile() async {
+    final response = await _apiService.get<Map<String, dynamic>>(
+      '/profile',
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final user = SuperAdminUser.fromJson(response.data!);
+      await updateCurrentUser(user);
+      return user;
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to fetch profile',
+      );
+    }
+  }
+
+  Future<SuperAdminUser> updateProfile({
+    required String name,
+    required String email,
+    String? phone,
+    String? username,
+    String? profileImage,
+  }) async {
+    final payload = <String, dynamic>{
+      'name': name.trim(),
+      'email': email.trim(),
+      'phone': phone?.trim(),
+      'username': username?.trim(),
+    };
+    if (profileImage != null) {
+      payload['profile_image'] = profileImage;
+    }
+
+    final response = await _apiService.put<Map<String, dynamic>>(
+      '/profile',
+      data: payload,
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final updatedUser = SuperAdminUser.fromJson(response.data!);
+      await updateCurrentUser(updatedUser);
+      return updatedUser;
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to update profile',
+        errors: response.errors,
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> forgotPassword(String emailOrUsername) async {
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/super-admin/forgot-password',
+      data: {
+        'email': emailOrUsername.trim(),
+      },
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      return response.data!;
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to send password reset request',
+        errors: response.errors,
+      );
+    }
+  }
+
+  Future<String> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/super-admin/reset-password',
+      data: {
+        'email': email.trim(),
+        'code': code.trim(),
+        'password': newPassword,
+        'password_confirmation': confirmPassword,
+      },
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess) {
+      return response.message.isNotEmpty ? response.message : 'Password reset successfully.';
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to reset password',
+        errors: response.errors,
+      );
+    }
+  }
+
+  Future<String> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/profile/change-password',
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': confirmPassword,
+      },
+    );
+
+    if (response.isSuccess) {
+      return response.message.isNotEmpty ? response.message : 'Password changed successfully.';
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to change password',
+        errors: response.errors,
+      );
+    }
+  }
+
+  Future<SuperAdminUser> updateProfileImage(String imageUrlOrBase64) async {
+    final response = await _apiService.post<Map<String, dynamic>>(
+      '/profile/image',
+      data: {
+        'image_data': imageUrlOrBase64.trim(),
+      },
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final updatedUser = SuperAdminUser.fromJson(response.data!);
+      await updateCurrentUser(updatedUser);
+      return updatedUser;
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to update profile image',
+        errors: response.errors,
+      );
+    }
+  }
+
+  Future<SuperAdminUser> deleteProfileImage() async {
+    final response = await _apiService.delete<Map<String, dynamic>>(
+      '/profile/image',
+      fromData: (data) => data as Map<String, dynamic>,
+    );
+
+    if (response.isSuccess && response.data != null) {
+      final updatedUser = SuperAdminUser.fromJson(response.data!);
+      await updateCurrentUser(updatedUser);
+      return updatedUser;
+    } else {
+      throw ApiException(
+        message: response.message.isNotEmpty ? response.message : 'Failed to remove profile image',
+        errors: response.errors,
+      );
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _storageService.clearAuthSession();
