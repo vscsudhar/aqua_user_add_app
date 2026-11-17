@@ -12,6 +12,7 @@ class CompanyModel {
   final String? email;
   final String? phone;
   final String? address;
+  final String? logoUrl;
   final int usersCount;
   final PlanModel? plan;
   final SuperAdminUser? adminUser;
@@ -28,6 +29,7 @@ class CompanyModel {
     this.email,
     this.phone,
     this.address,
+    this.logoUrl,
     this.usersCount = 0,
     this.plan,
     this.adminUser,
@@ -48,6 +50,7 @@ class CompanyModel {
       email: json['email'] as String?,
       phone: json['phone'] as String?,
       address: json['address'] as String?,
+      logoUrl: json['logo_url'] as String?,
       usersCount: json['users_count'] is int ? json['users_count'] : int.tryParse(json['users_count']?.toString() ?? '') ?? 0,
       plan: json['plan'] is Map<String, dynamic> ? PlanModel.fromJson(json['plan'] as Map<String, dynamic>) : null,
       adminUser: json['admin_user'] is Map<String, dynamic>
@@ -69,6 +72,7 @@ class CompanyModel {
       'email': email,
       'phone': phone,
       'address': address,
+      'logo_url': logoUrl,
       'users_count': usersCount,
       'plan': plan?.toJson(),
       'admin_user': adminUser?.toJson(),
